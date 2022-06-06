@@ -1,8 +1,9 @@
+// ignore_for_file: prefer_const_constructors, sort_child_properties_last, non_constant_identifier_names, unused_field, must_be_immutable, prefer_final_fields
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:notepad/style/app_style.dart';
-
-import '../Models/note.dart';
+import 'dart:math';
 
 class NoteReaderScreen extends StatefulWidget {
   NoteReaderScreen(this.doc, {Key? key}) : super(key: key);
@@ -13,6 +14,11 @@ class NoteReaderScreen extends StatefulWidget {
 }
 
 class _NoteReaderScreenState extends State<NoteReaderScreen> {
+  int color_id = Random().nextInt(AppStyle.cardsColor.length);
+  String date = DateTime.now().toString();
+  TextEditingController _titleController = TextEditingController();
+  TextEditingController _mainController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     int color_id = widget.doc['color_id'];
@@ -52,7 +58,13 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
       floatingActionButton:
           Column(mainAxisAlignment: MainAxisAlignment.end, children: <Widget>[
         FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            final docNote = FirebaseFirestore.instance
+                .collection('Notes')
+                .doc(widget.doc.id);
+            docNote.update({"note_title": '', "note_content:": ''});
+            Navigator.pop(context);
+          },
           child: Icon(Icons.edit),
           foregroundColor: Colors.white,
           heroTag: null,
@@ -60,8 +72,9 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
         SizedBox(height: 20),
         FloatingActionButton(
           onPressed: () {
-            final docNote =
-                FirebaseFirestore.instance.collection('Notes').doc();
+            final docNote = FirebaseFirestore.instance
+                .collection('Notes')
+                .doc(widget.doc.id);
             docNote.delete();
             Navigator.pop(context);
           },
