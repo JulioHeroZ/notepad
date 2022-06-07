@@ -2,6 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:notepad/screens/home_screen.dart';
 import 'package:notepad/style/app_style.dart';
 import 'dart:math';
 
@@ -16,11 +17,12 @@ class NoteReaderScreen extends StatefulWidget {
 class _NoteReaderScreenState extends State<NoteReaderScreen> {
   int color_id = Random().nextInt(AppStyle.cardsColor.length);
   String date = DateTime.now().toString();
-  TextEditingController _titleController = TextEditingController();
-  TextEditingController _mainController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController _titleController = TextEditingController();
+    TextEditingController _mainController = TextEditingController();
+
     int color_id = widget.doc['color_id'];
     return Scaffold(
       backgroundColor: AppStyle.cardsColor[color_id],
@@ -33,8 +35,10 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.doc["note_title"],
+            TextField(
+              controller: _titleController,
+              decoration: InputDecoration(
+                  border: InputBorder.none, hintText: widget.doc["note_title"]),
               style: AppStyle.mainTitle,
             ),
             SizedBox(
@@ -47,10 +51,12 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
             SizedBox(
               height: 28.0,
             ),
-            Text(
-              widget.doc["note_content"],
+            TextField(
+              controller: _mainController,
+              decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: widget.doc["note_content"]),
               style: AppStyle.mainContent,
-              overflow: TextOverflow.ellipsis,
             )
           ],
         ),
@@ -62,7 +68,10 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
             final docNote = FirebaseFirestore.instance
                 .collection('Notes')
                 .doc(widget.doc.id);
-            docNote.update({"note_title": '', "note_content:": ''});
+            docNote.update({
+              "note_title": _titleController.text,
+              "note_content": _mainController.text
+            });
             Navigator.pop(context);
           },
           child: Icon(Icons.edit),
@@ -72,11 +81,7 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
         SizedBox(height: 20),
         FloatingActionButton(
           onPressed: () {
-            final docNote = FirebaseFirestore.instance
-                .collection('Notes')
-                .doc(widget.doc.id);
-            docNote.delete();
-            Navigator.pop(context);
+            deleteDialog(context);
           },
           child: Icon(Icons.delete),
           backgroundColor: Colors.red,
@@ -86,4 +91,31 @@ class _NoteReaderScreenState extends State<NoteReaderScreen> {
       ]),
     );
   }
+
+  Future deleteDialog(context) async => showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+            title: Text("Deletar"),
+            content: Text("Você tem certeza?"),
+            actions: <Widget>[
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Não")),
+              TextButton(
+                  onPressed: () {
+                    final docNote = FirebaseFirestore.instance
+                        .collection('Notes')
+                        .doc(widget.doc.id);
+                    docNote.delete();
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => HomeScreen(),
+                        ));
+                  },
+                  child: Text("Sim")),
+            ],
+          ));
 }
